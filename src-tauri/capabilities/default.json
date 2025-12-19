@@ -1,0 +1,25 @@
+{
+    "$schema": "../gen/schemas/desktop-schema.json",
+    "identifier": "default",
+    "description": "Capability for the main window",
+    "windows": [
+        "main",
+        "messenger-window"
+    ],
+    "remote": {
+        "urls": [
+            "https://*.messenger.com/*",
+            "https://messenger.com/*",
+            "https://*.facebook.com/*",
+            "https://facebook.com/*"
+        ]
+    },
+    "permissions": [
+        "core:default",
+        "opener:default",
+        "notification:default",
+        "core:window:allow-hide",
+        "core:window:allow-show",
+        "core:window:allow-create"
+    ]
+}
