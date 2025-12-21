@@ -1,6 +1,24 @@
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_notification::NotificationExt;
 use tauri::UserAttentionType;
+use tauri_plugin_opener::OpenerExt;
+
+const LINK_REDIRECT_SCRIPT: &str = r#"
+(function (){
+    console.log('Link observer started')
+
+    document.addEventListener('click', (e) => {
+        if (e.target.tagName == "A" && e.target.getAttribute("role") == "link") {
+            if (window.__TAURI__ && window.__TAURI__.core) {
+                window.__TAURI__.core.invoke('open_link', { link: e.target.getAttribute("href") })
+                    .catch(err => console.error("Failed while opening link: ", err));
+            } else {
+                console.error("Tauri API not found!")
+            }
+        }
+    })
+})()
+"#;
 
 const INJECT_SCRIPT: &str = r#"
 (function() {
@@ -55,12 +73,17 @@ fn notify_command(app: AppHandle, title: String) {
     }
 }
 
+#[tauri::command]
+fn open_link(app: AppHandle, link: String) {
+    app.opener().open_path(link, None::<&str>);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![notify_command])
+        .invoke_handler(tauri::generate_handler![notify_command, open_link])
         .setup(|app| {
             let win = WebviewWindowBuilder::new(
                 app,
@@ -71,6 +94,7 @@ pub fn run() {
             .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.3650.96")
             .inner_size(800.0, 600.0)
             .initialization_script(INJECT_SCRIPT)
+            .initialization_script(LINK_REDIRECT_SCRIPT)
             .build()?;
 
             win.set_focus()?;
