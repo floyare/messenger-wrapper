@@ -8,9 +8,14 @@ const LINK_REDIRECT_SCRIPT: &str = r#"
     console.log('Link observer started')
 
     document.addEventListener('click', (e) => {
-        if (e.target.tagName == "A" && e.target.getAttribute("role") == "link") {
+        const anchor = e.target.closest('a');
+        if(!anchor) return;
+
+        if (anchor.getAttribute("role") == "link" && anchor.target === "_blank") {
+            e.preventDefault();
+
             if (window.__TAURI__ && window.__TAURI__.core) {
-                window.__TAURI__.core.invoke('open_link', { link: e.target.getAttribute("href") })
+                window.__TAURI__.core.invoke('open_link', { link: anchor.getAttribute("href") })
                     .catch(err => console.error("Failed while opening link: ", err));
             } else {
                 console.error("Tauri API not found!")
