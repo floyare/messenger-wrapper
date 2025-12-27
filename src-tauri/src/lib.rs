@@ -100,6 +100,7 @@ pub fn run() {
             .inner_size(800.0, 600.0)
             .initialization_script(INJECT_SCRIPT)
             .initialization_script(LINK_REDIRECT_SCRIPT)
+            .disable_drag_drop_handler()
             .build()?;
 
             win.set_focus()?;
